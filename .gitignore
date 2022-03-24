@@ -1,0 +1,5 @@
+.env
+mensageria*
+mensageria.exe
+go.mod
+go.sum
