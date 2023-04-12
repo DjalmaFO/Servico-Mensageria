@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	"gopkg.in/gomail.v2"
 )
@@ -20,6 +21,10 @@ type ArgumentosEmail struct {
 }
 
 func (a *ArgumentosEmail) ValidarEmails() (ok bool) {
+	if len(a.Para) == 0 {
+		return
+	}
+
 	for _, email := range a.Para {
 		if !ValidaFormatoEmail(email) {
 			return
@@ -44,7 +49,7 @@ func (a *ArgumentosEmail) ValidarDados() error {
 	return nil
 }
 
-func (a *ArgumentosEmail) EnviarEmail(destinatario string) (err error) {
+func (a *ArgumentosEmail) EnviarEmail(mailError string) (err error) {
 	log.Println("Formatando e-mail")
 	m := gomail.NewMessage()
 
@@ -52,7 +57,11 @@ func (a *ArgumentosEmail) EnviarEmail(destinatario string) (err error) {
 	m.SetHeader("From", config.MailFrom)
 
 	// Set E-Mail receivers
-	m.SetHeader("To", destinatario)
+	if len(mailError) == 0 {
+		m.SetHeader("To", a.Para...)
+	} else {
+		m.SetHeader("To", mailError)
+	}
 
 	if len(a.CC) > 0 {
 		m.SetHeader("Cc", a.CC)
@@ -71,7 +80,11 @@ func (a *ArgumentosEmail) EnviarEmail(destinatario string) (err error) {
 	}
 
 	if len(a.Anexo) > 0 {
-		m.Attach(a.Anexo)
+		for _, anexo := range strings.Split(a.Anexo, ";") {
+			if len(strings.TrimSpace(anexo)) > 0 {
+				m.Attach(strings.TrimSpace(anexo))
+			}
+		}
 	}
 
 	port, err := strconv.Atoi(config.MailPort)
@@ -106,7 +119,9 @@ func (a *ArgumentosEmail) EnviarEmail(destinatario string) (err error) {
 	// 	return err
 	// }
 
-	log.Printf("Enviando email para %s\n", destinatario)
+	if len(mailError) == 0 {
+		log.Printf("Enviando email para %v\n", a.Para)
+	}
 
 	// Now send E-Mail
 	if err := d.DialAndSend(m); err != nil {

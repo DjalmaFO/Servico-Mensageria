@@ -28,12 +28,10 @@ func RodarRotina() {
 				erro.EnviarEmail(config.EmailError)
 			}
 
-			for _, v := range args.Para {
-				if err := args.EnviarEmail(v); err != nil {
-					log.Println(err.Error())
-					erro.Texto += fmt.Sprintf("Motivo: Falha ao montar email.\nMensagem de erro: %s\nDestinatário: %s", err.Error(), v)
-					erro.EnviarEmail(config.EmailError)
-				}
+			if err := args.EnviarEmail(""); err != nil {
+				log.Println(err.Error())
+				erro.Texto += fmt.Sprintf("Motivo: Falha ao montar email.\nMensagem de erro: %s\nDestinatários: %v", err.Error(), args.Para)
+				erro.EnviarEmail(config.EmailError)
 			}
 		} else {
 			time.Sleep(1 * time.Minute)
